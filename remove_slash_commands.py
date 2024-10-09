@@ -11,8 +11,8 @@ async def remove_slash_commands(bot: discord.Client):
 
     # Get all guilds the bot is in
     for guild in bot.guilds:
-        # Fetch all guild slash commands using the correct method
-        commands = await bot.fetch_guild_application_commands(guild.id)
+        # Fetch all guild application commands using the HTTP client
+        commands = await bot.http.get_guild_application_commands(app.id, guild.id)
         for command in commands:
-            await bot.delete_guild_application_command(command.id, guild.id)
-            print(f'Deleted command: {command.name} from guild: {guild.name}')
+            await bot.http.delete_guild_application_command(app.id, command['id'], guild.id)
+            print(f'Deleted command: {command["name"]} from guild: {guild.name}')

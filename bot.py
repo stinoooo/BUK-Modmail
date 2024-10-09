@@ -12,6 +12,7 @@ import struct
 import sys
 import platform
 import typing
+from remove_slash_commands import remove_slash_commands
 from datetime import datetime, timezone, timedelta
 from subprocess import PIPE
 from types import SimpleNamespace
@@ -507,47 +508,52 @@ class ModmailBot(commands.Bot):
         await self.load_extensions()
         self._connected.set()
 
-    async def on_ready(self):
-        """Bot startup, sets uptime."""
+async def on_ready(self):
+    """Bot startup, sets uptime."""
 
-        # Wait until config cache is populated with stuff from db and on_connect ran
-        await self.wait_for_connected()
+    # Wait until config cache is populated with stuff from db and on_connect ran
+    await self.wait_for_connected()
 
-        if self.guild is None:
-            logger.error("Logging out due to invalid GUILD_ID.")
-            return await self.close()
+    if self.guild is None:
+        logger.error("Logging out due to invalid GUILD_ID.")
+        return await self.close()
 
-        if self._started:
-            # Bot has started before
-            logger.line()
-            logger.warning("Bot restarted due to internal discord reloading.")
-            logger.line()
-            return
-
+    if self._started:
+        # Bot has started before
         logger.line()
-        logger.debug("Client ready.")
-        logger.info("Logged in as: %s", self.user)
-        logger.info("Bot ID: %s", self.user.id)
-        owners = ", ".join(
-            getattr(self.get_user(owner_id), "name", str(owner_id)) for owner_id in self.bot_owner_ids
+        logger.warning("Bot restarted due to internal discord reloading.")
+        logger.line()
+        return
+
+    logger.line()
+    logger.debug("Client ready.")
+    logger.info("Logged in as: %s", self.user)
+    logger.info("Bot ID: %s", self.user.id)
+    owners = ", ".join(
+        getattr(self.get_user(owner_id), "name", str(owner_id)) for owner_id in self.bot_owner_ids
+    )
+    logger.info("Owners: %s", owners)
+    logger.info("Prefix: %s", self.prefix)
+    logger.info("Guild Name: %s", self.guild.name)
+    logger.info("Guild ID: %s", self.guild.id)
+    if self.using_multiple_server_setup:
+        logger.info("Receiving guild ID: %s", self.modmail_guild.id)
+    logger.line()
+
+    if "dev" in __version__:
+        logger.warning(
+            "You are running a developmental version. This should not be used in production. (v%s)",
+            __version__,
         )
-        logger.info("Owners: %s", owners)
-        logger.info("Prefix: %s", self.prefix)
-        logger.info("Guild Name: %s", self.guild.name)
-        logger.info("Guild ID: %s", self.guild.id)
-        if self.using_multiple_server_setup:
-            logger.info("Receiving guild ID: %s", self.modmail_guild.id)
         logger.line()
 
-        if "dev" in __version__:
-            logger.warning(
-                "You are running a developmental version. This should not be used in production. (v%s)",
-                __version__,
-            )
-            logger.line()
+    await self.threads.populate_cache()
 
-        await self.threads.populate_cache()
+    # Call the function to remove all slash commands
+    await remove_slash_commands(self)  # Ensure this is at the end so it runs after the rest of the setup
 
+
+        
         # closures
         closures = self.config["closures"]
         logger.info("There are %d thread(s) pending to be closed.", len(closures))

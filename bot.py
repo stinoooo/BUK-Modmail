@@ -72,7 +72,7 @@ class ModmailBot(commands.Bot):
         if not self.config["enable_presence_intent"]:
             intents.presences = False
 
-        super().__init__(command_prefix=None, intents=intents)  # implemented in `get_prefix`
+        super().__init__(command_prefix=None, intents=intents)  # implemented in get_prefix
         self.session = None
         self._api = None
         self.formatter = SafeFormatter()
@@ -91,18 +91,6 @@ class ModmailBot(commands.Bot):
 
         self.plugin_db = PluginDatabaseClient(self)  # Deprecated
         self.startup()
-
-    @commands.is_owner()  # Only the bot owner can run this command
-    @commands.command(name='remove_slash_commands')
-    async def remove_slash_commands(self, ctx):
-        """Remove all slash commands."""
-        app = await self.application_info()
-        commands = await self.http.get_guild_application_commands(app.id, ctx.guild.id)
-        
-        for command in commands:
-            await self.http.delete_guild_application_command(app.id, command['id'], ctx.guild.id)
-
-        await ctx.send('All slash commands have been removed!')
 
     def get_guild_icon(
         self, guild: typing.Optional[discord.Guild], *, size: typing.Optional[int] = None
@@ -325,7 +313,7 @@ class ModmailBot(commands.Bot):
             except IndexError:
                 pass
         logger.warning(
-            "No log channel set, set one with `%ssetup` or `%sconfig set log_channel_id <id>`.",
+            "No log channel set, set one with %ssetup or %sconfig set log_channel_id <id>.",
             self.prefix,
             self.prefix,
         )
@@ -1555,7 +1543,7 @@ class ModmailBot(commands.Bot):
                     if hasattr(check, "permission_level"):
                         corrected_permission_level = self.command_perm(context.command.qualified_name)
                         logger.warning(
-                            "User %s does not have permission to use this command: `%s` (%s).",
+                            "User %s does not have permission to use this command: %s (%s).",
                             context.author.name,
                             context.command.qualified_name,
                             corrected_permission_level.name,
@@ -1647,7 +1635,7 @@ class ModmailBot(commands.Bot):
                 user = data["user"]
                 embed.add_field(
                     name="Merge Commit",
-                    value=f"[`{short_sha}`]({html_url}) " f"{message} - {user['username']}",
+                    value=f"[{short_sha}]({html_url}) " f"{message} - {user['username']}",
                 )
                 embed.set_author(
                     name=user["username"] + " - Updating Bot",
@@ -1813,7 +1801,7 @@ def main():
         else:
             if "ubuntu" in platform.version().lower() or "debian" in platform.version().lower():
                 logger.error(
-                    "Unable to import cairosvg, try running `sudo apt-get install libpangocairo-1.0-0` or report on our support server with your OS details: https://discord.gg/etJNHCQ"
+                    "Unable to import cairosvg, try running sudo apt-get install libpangocairo-1.0-0 or report on our support server with your OS details: https://discord.gg/etJNHCQ"
                 )
             else:
                 logger.error(

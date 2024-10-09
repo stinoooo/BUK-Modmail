@@ -510,8 +510,6 @@ class ModmailBot(commands.Bot):
 
 async def on_ready(self):
     """Bot startup, sets uptime."""
-
-    # Wait until config cache is populated with stuff from db and on_connect ran
     await self.wait_for_connected()
 
     if self.guild is None:
@@ -519,7 +517,6 @@ async def on_ready(self):
         return await self.close()
 
     if self._started:
-        # Bot has started before
         logger.line()
         logger.warning("Bot restarted due to internal discord reloading.")
         logger.line()
@@ -550,7 +547,8 @@ async def on_ready(self):
     await self.threads.populate_cache()
 
     # Call the function to remove all slash commands
-    await remove_slash_commands(self)  # Ensure this is at the end so it runs after the rest of the setup
+    await remove_slash_commands(self)
+
 
 
         

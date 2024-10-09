@@ -12,7 +12,6 @@ import struct
 import sys
 import platform
 import typing
-from remove_slash_commands import remove_slash_commands
 from datetime import datetime, timezone, timedelta
 from subprocess import PIPE
 from types import SimpleNamespace
@@ -22,6 +21,7 @@ import isodate
 from aiohttp import ClientSession, ClientResponseError
 from discord.ext import commands, tasks
 from discord.ext.commands.view import StringView
+from remove_slash_commands import remove_slash_commands
 from emoji import is_emoji
 from packaging.version import Version
 
@@ -73,7 +73,7 @@ class ModmailBot(commands.Bot):
         if not self.config["enable_presence_intent"]:
             intents.presences = False
 
-        super().__init__(command_prefix=None, intents=intents)  # implemented in get_prefix
+        super().__init__(command_prefix=None, intents=intents)  # implemented in `get_prefix`
         self.session = None
         self._api = None
         self.formatter = SafeFormatter()
@@ -314,7 +314,7 @@ class ModmailBot(commands.Bot):
             except IndexError:
                 pass
         logger.warning(
-            "No log channel set, set one with %ssetup or %sconfig set log_channel_id <id>.",
+            "No log channel set, set one with `%ssetup` or `%sconfig set log_channel_id <id>`.",
             self.prefix,
             self.prefix,
         )
@@ -508,50 +508,50 @@ class ModmailBot(commands.Bot):
         await self.load_extensions()
         self._connected.set()
 
-async def on_ready(self):
-    """Bot startup, sets uptime."""
-    await self.wait_for_connected()
+    async def on_ready(self):
+        """Bot startup, sets uptime."""
 
-    if self.guild is None:
-        logger.error("Logging out due to invalid GUILD_ID.")
-        return await self.close()
+        # Wait until config cache is populated with stuff from db and on_connect ran
+        await self.wait_for_connected()
 
-    if self._started:
+        if self.guild is None:
+            logger.error("Logging out due to invalid GUILD_ID.")
+            return await self.close()
+
+        if self._started:
+            # Bot has started before
+            logger.line()
+            logger.warning("Bot restarted due to internal discord reloading.")
+            logger.line()
+            return
+
         logger.line()
-        logger.warning("Bot restarted due to internal discord reloading.")
-        logger.line()
-        return
-
-    logger.line()
-    logger.debug("Client ready.")
-    logger.info("Logged in as: %s", self.user)
-    logger.info("Bot ID: %s", self.user.id)
-    owners = ", ".join(
-        getattr(self.get_user(owner_id), "name", str(owner_id)) for owner_id in self.bot_owner_ids
-    )
-    logger.info("Owners: %s", owners)
-    logger.info("Prefix: %s", self.prefix)
-    logger.info("Guild Name: %s", self.guild.name)
-    logger.info("Guild ID: %s", self.guild.id)
-    if self.using_multiple_server_setup:
-        logger.info("Receiving guild ID: %s", self.modmail_guild.id)
-    logger.line()
-
-    if "dev" in __version__:
-        logger.warning(
-            "You are running a developmental version. This should not be used in production. (v%s)",
-            __version__,
+        logger.debug("Client ready.")
+        logger.info("Logged in as: %s", self.user)
+        logger.info("Bot ID: %s", self.user.id)
+        owners = ", ".join(
+            getattr(self.get_user(owner_id), "name", str(owner_id)) for owner_id in self.bot_owner_ids
         )
+        logger.info("Owners: %s", owners)
+        logger.info("Prefix: %s", self.prefix)
+        logger.info("Guild Name: %s", self.guild.name)
+        logger.info("Guild ID: %s", self.guild.id)
+        if self.using_multiple_server_setup:
+            logger.info("Receiving guild ID: %s", self.modmail_guild.id)
         logger.line()
 
-    await self.threads.populate_cache()
+        if "dev" in __version__:
+            logger.warning(
+                "You are running a developmental version. This should not be used in production. (v%s)",
+                __version__,
+            )
+            logger.line()
 
-    # Call the function to remove all slash commands
-    await remove_slash_commands(self)
+        await self.threads.populate_cache()
+        # Call the remove_slash_commands function
+        await remove_slash_commands(self)
 
 
-
-        
         # closures
         closures = self.config["closures"]
         logger.info("There are %d thread(s) pending to be closed.", len(closures))
@@ -1547,7 +1547,7 @@ async def on_ready(self):
                     if hasattr(check, "permission_level"):
                         corrected_permission_level = self.command_perm(context.command.qualified_name)
                         logger.warning(
-                            "User %s does not have permission to use this command: %s (%s).",
+                            "User %s does not have permission to use this command: `%s` (%s).",
                             context.author.name,
                             context.command.qualified_name,
                             corrected_permission_level.name,
@@ -1639,7 +1639,7 @@ async def on_ready(self):
                 user = data["user"]
                 embed.add_field(
                     name="Merge Commit",
-                    value=f"[{short_sha}]({html_url}) " f"{message} - {user['username']}",
+                    value=f"[`{short_sha}`]({html_url}) " f"{message} - {user['username']}",
                 )
                 embed.set_author(
                     name=user["username"] + " - Updating Bot",
@@ -1805,7 +1805,7 @@ def main():
         else:
             if "ubuntu" in platform.version().lower() or "debian" in platform.version().lower():
                 logger.error(
-                    "Unable to import cairosvg, try running sudo apt-get install libpangocairo-1.0-0 or report on our support server with your OS details: https://discord.gg/etJNHCQ"
+                    "Unable to import cairosvg, try running `sudo apt-get install libpangocairo-1.0-0` or report on our support server with your OS details: https://discord.gg/etJNHCQ"
                 )
             else:
                 logger.error(

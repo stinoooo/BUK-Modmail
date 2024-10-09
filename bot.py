@@ -92,6 +92,22 @@ class ModmailBot(commands.Bot):
         self.plugin_db = PluginDatabaseClient(self)  # Deprecated
         self.startup()
 
+    @commands.is_owner()  # Only the bot owner can run this command
+    @commands.command(name='remove_slash_commands')
+    async def remove_slash_commands(self, ctx):
+        """Remove all slash commands."""
+        # Get the bot's application (this is the bot itself)
+        app = await self.application_info()
+        
+        # Retrieve all guild slash commands
+        commands = await self.http.get_guild_application_commands(app.id, ctx.guild.id)
+        
+        # Loop through each command and delete it
+        for command in commands:
+            await self.http.delete_guild_application_command(app.id, command['id'], ctx.guild.id)
+
+        await ctx.send('All slash commands have been removed!')
+
     def get_guild_icon(
         self, guild: typing.Optional[discord.Guild], *, size: typing.Optional[int] = None
     ) -> str:

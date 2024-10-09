@@ -1,5 +1,6 @@
 import discord
 import requests
+import asyncio
 from core.config import ConfigManager  # Adjust based on your project structure
 
 async def remove_slash_commands(bot: discord.Client):
@@ -33,9 +34,24 @@ async def remove_slash_commands(bot: discord.Client):
                 'Authorization': f'Bot {token}',
                 'Content-Type': 'application/json'
             }
+            
+            # Attempt to delete the command
             response = requests.delete(url, headers=headers)
 
             if response.status_code == 204:
                 print(f'Successfully deleted command ID: {command_id} from guild: {guild.name}')
+            elif response.status_code == 404:
+                print(f'Command ID: {command_id} not found in guild: {guild.name}.')
+            elif response.status_code == 429:
+                retry_after = response.json().get('retry_after', 1)
+                print(f'Rate limited. Retrying after {retry_after} seconds...')
+                await asyncio.sleep(retry_after)
+                # Retry deleting the command after waiting
+                response = requests.delete(url, headers=headers)
+                if response.status_code == 204:
+                    print(f'Successfully deleted command ID: {command_id} from guild: {guild.name} after retrying.')
             else:
                 print(f'Failed to delete command ID: {command_id} from guild: {guild.name}, Error: {response.text}')
+
+            # Optional: Wait a bit between requests to avoid hitting the rate limit too fast
+            await asyncio.sleep(1)  # Adjust sleep duration as needed

@@ -1,4 +1,5 @@
 import discord
+import requests
 from core.config import ConfigManager  # Adjust based on your project structure
 
 async def remove_slash_commands(bot: discord.Client):
@@ -7,7 +8,8 @@ async def remove_slash_commands(bot: discord.Client):
     config = ConfigManager(None)  # Adjust this line if needed
     config.populate_cache()
 
-    app = await bot.application_info()
+    token = config["token"]
+    app_id = bot.user.id
 
     # List of command IDs to remove
     command_ids_to_remove = [
@@ -24,9 +26,16 @@ async def remove_slash_commands(bot: discord.Client):
 
     # Get all guilds the bot is in
     for guild in bot.guilds:
+        guild_id = guild.id
         for command_id in command_ids_to_remove:
-            try:
-                await bot.http.delete_guild_application_command(app.id, command_id, guild.id)
-                print(f'Deleted command ID: {command_id} from guild: {guild.name}')
-            except Exception as e:
-                print(f'Failed to delete command ID: {command_id} from guild: {guild.name}, Error: {e}')
+            url = f'https://discord.com/api/v10/applications/{app_id}/guilds/{guild_id}/commands/{command_id}'
+            headers = {
+                'Authorization': f'Bot {token}',
+                'Content-Type': 'application/json'
+            }
+            response = requests.delete(url, headers=headers)
+
+            if response.status_code == 204:
+                print(f'Successfully deleted command ID: {command_id} from guild: {guild.name}')
+            else:
+                print(f'Failed to delete command ID: {command_id} from guild: {guild.name}, Error: {response.text}')

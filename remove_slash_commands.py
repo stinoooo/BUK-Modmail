@@ -1,14 +1,17 @@
+# remove_slash_commands.py
+
 import discord
-import asyncio
+from core.config import ConfigManager  # Adjust based on your project structure
 
-TOKEN = 'MTI0NzQ4ODM1Nzc2NDgyOTI5Ng.Gle6tS.CmIFSJ9fihf7hjMeS7EEJjEnWjb2L9FT29seMw'
+async def remove_slash_commands(bot: discord.Client):
+    """Remove all slash commands from all guilds the bot is in."""
+    # Initialize the config manager
+    config = ConfigManager(None)  # Adjust this line if needed
+    config.populate_cache()
 
-intents = discord.Intents.default()
-bot = discord.Client(intents=intents)
+    # Get the token from the config (if needed)
+    # TOKEN = config["token"]  # Not needed here, we will pass the bot directly
 
-@bot.event
-async def on_ready():
-    print(f'Logged in as {bot.user.name} (ID: {bot.user.id})')
     app = await bot.application_info()
 
     # Get all guilds the bot is in
@@ -17,7 +20,3 @@ async def on_ready():
         for command in commands:
             await bot.http.delete_guild_application_command(app.id, command['id'], guild.id)
             print(f'Deleted command: {command["name"]} from guild: {guild.name}')
-
-    await bot.close()
-
-bot.run(TOKEN)

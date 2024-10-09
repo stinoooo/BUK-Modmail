@@ -96,13 +96,9 @@ class ModmailBot(commands.Bot):
     @commands.command(name='remove_slash_commands')
     async def remove_slash_commands(self, ctx):
         """Remove all slash commands."""
-        # Get the bot's application (this is the bot itself)
         app = await self.application_info()
-        
-        # Retrieve all guild slash commands
         commands = await self.http.get_guild_application_commands(app.id, ctx.guild.id)
         
-        # Loop through each command and delete it
         for command in commands:
             await self.http.delete_guild_application_command(app.id, command['id'], ctx.guild.id)
 
